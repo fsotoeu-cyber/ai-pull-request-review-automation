@@ -11,7 +11,7 @@
 # 🤖 AI-Powered Pull Request Review Automation
 ### Intelligent CI Workflow with n8n, Google Gemini, GitHub, Slack & Trello
 
-> AI-assisted code review workflow that automates Pull Request validation, incorporates **Human-in-the-Loop** approval, and synchronizes project status across GitHub, Slack, Trello, and n8n DataTables.
+> AI-assisted code review workflow that automates initial Pull Request analysis, incorporates conditional **Human-in-the-Loop** validation, and synchronizes the final outcome across GitHub, Slack, Trello, and n8n DataTables.
 
 ---
 
@@ -29,39 +29,68 @@
 
 ## 📌 Overview
 
-This project implements an AI-powered Continuous Integration (CI) workflow using **n8n**. 
+This project implements an automated Pull Request review workflow using **n8n** as the orchestration engine and **Google Gemini** for initial code analysis.
 
-When a Pull Request is opened, the workflow automatically analyzes the submitted code using **Google Gemini**, validates it against predefined engineering best practices, and decides whether it should continue to human approval or be rejected immediately.
+When a developer opens a Pull Request, the workflow receives the event from GitHub, logs the execution in **n8n DataTables**, and sends the relevant information to Gemini to generate a structured evaluation.
 
-If the AI approves the Pull Request, the workflow requests final approval from a technical lead through **Slack Interactive Messages**. Once approved, GitHub, Trello, and the internal audit logs are updated automatically.
+Based on the AI's analysis, the workflow follows one of two paths:
+- **If AI rejects the PR:** The automatic rejection route is executed immediately.
+- **If AI approves the PR:** The process moves to a **Human-in-the-Loop** stage, where a human reviewer makes the final decision to approve or reject.
 
-**The objective:** Reduce manual code review bottlenecks and context-switching while maintaining strict human oversight for critical development decisions.
+The architecture perfectly combines AI-driven automation with conditional human oversight and state synchronization across GitHub, Slack, Trello, and internal logs.
 
 ---
 
-## 🛑 The Problem
+## 🎯 Objective
 
-Code reviews frequently become a severe bottleneck during the software development life cycle. Engineering teams spend significant dev-hours reviewing repetitive coding standards and constantly switching contexts between GitHub, Slack, Trello, and project management tools. This friction slows down deployments and makes project tracking highly inefficient.
+Automate the first stage of code review and reduce repetitive coordination tasks, while maintaining strict human intervention for Pull Requests that pass the initial AI evaluation. 
 
-## 💡 The Solution & Business Value
-
-This workflow automates the first stage of Pull Request validation, functioning as an intelligent filter before a human reviewer steps in. 
-
-* **Increases Dev Velocity:** Eliminates time spent on initial syntax and standard checks.
-* **Reduces Context Switching:** Developers approve or reject directly from Slack without opening GitHub or Trello.
-* **Maintains Security & Quality:** Enforces a strictly audited *Human-in-the-Loop* pattern for final deployment decisions.
+This workflow demonstrates enterprise-level integration of:
+- Event-Driven Automation
+- LLM Integration & Prompt Engineering
+- Human-in-the-Loop (HITL) Architecture
+- Project Management & CI/CD Synchronization
+- Execution Logging & Traceability
 
 ---
 
 ## 🚀 Features
 
-- ✅ **Event-Driven:** GitHub Pull Request Trigger.
-- ✅ **AI Code Review:** Automated semantic analysis with Google Gemini.
-- ✅ **Structured Output:** Deterministic JSON decision parsing.
-- ✅ **Human-in-the-Loop:** Interactive approval via Slack UI blocks.
-- ✅ **CI/CD Integration:** Automatic GitHub Review creation (Approve/Request Changes).
-- ✅ **Project Sync:** Trello card status automation.
-- ✅ **Audit Logging:** Centralized execution history using n8n DataTables.
+- ✅ **GitHub Pull Request Trigger**
+- ✅ **AI-assisted code review** with Google Gemini
+- ✅ **Structured JSON output** parsing
+- ✅ **Conditional decision routing**
+- ✅ **Automatic AI rejection** pipeline
+- ✅ **Human-in-the-Loop approval** via interactive Slack UI
+- ✅ **GitHub Review automation**
+- ✅ **Trello board synchronization**
+- ✅ **Internal execution logging** via n8n DataTables
+- ✅ **Fully tested logic:** Three main decision routes implemented and validated.
+
+---
+
+## 🛑 The Problem
+
+Manual code review easily becomes a bottleneck in the software development lifecycle. Technical teams must review PRs, communicate decisions, update management tools, and maintain traceability.
+
+Constant context-switching between GitHub, Slack, and Trello generates:
+- Repetitive manual processes.
+- Increased coordination overhead.
+- State desynchronization between tools.
+- Loss of decision traceability.
+
+---
+
+## 💡 The Solution
+
+This workflow automates the crucial first filter. When a PR is opened:
+1. GitHub triggers the workflow.
+2. Execution state is initialized in DataTables.
+3. Code is sent to Gemini for analysis.
+4. Gemini returns a structured JSON decision.
+5. If the AI rejects, an automatic feedback loop requests changes.
+6. If the AI approves, Slack requests validation from a human lead.
+7. Upon human approval, GitHub, Trello, and DataTables are instantly updated.
 
 ---
 
@@ -74,163 +103,238 @@ This workflow automates the first stage of Pull Request validation, functioning 
                  GitHub Trigger (n8n)
                          │
                          ▼
-                 Store Execution Log
-                 (DataTables)
+                 Execution Logging
+                  (DataTables)
                          │
                          ▼
                  Google Gemini Review
                          │
-                 JSON Decision Output
+                         ▼
+                    AI Decision
                          │
               ┌──────────┴──────────┐
               │                     │
               ▼                     ▼
-          AI Reject             AI Approves
+         AI Reject              AI Approves
               │                     │
               ▼                     ▼
-        GitHub Review         Slack Approval
-                                    │
-                           ┌────────┴────────┐
-                           ▼                 ▼
-                     Human Reject      Human Approves
-                           │                 │
-                           ▼                 ▼
-                     GitHub Review     GitHub Approval
-                                             │
-                                             ▼
-                                       Update Trello
-                                             │
-                                             ▼
-                                    Update DataTables
+        GitHub Review        Slack Approval
+              │                     │
+              ▼              Human Decision
+        Slack Notification           │
+              │             ┌────────┴────────┐
+              ▼             │                 │
+        Update DataTable    ▼                 ▼
+                      Human Reject      Human Approves
+                            │                 │
+                            ▼                 ▼
+                      GitHub Review      GitHub Review
+                            │                 │
+                            ▼                 ▼
+                     Slack Notification  Extract Trello ID
+                            │                 │
+                            ▼                 ▼
+                     Update DataTable    Move Trello Card
+                                              │
+                                              ▼
+                                       Update DataTable
 ```
+---
+
+## ⚙️ Technologies
+
+| Category | Technology |
+| :--- | :--- |
+| **Workflow Automation** | n8n |
+| **AI / LLM** | Google Gemini |
+| **Source Control** | GitHub |
+| **Collaboration** | Slack |
+| **Project Management** | Trello |
+| **Email** | Gmail |
+| **Programming** | JavaScript |
+| **Data Storage** | n8n DataTables |
+
 ---
 
 ## 🔄 Workflow Logic
 
-1. **Trigger:** GitHub detects a newly opened Pull Request.
-2. **Audit Initialization:** The execution is instantly registered in n8n DataTables.
-3. **AI Evaluation:** Google Gemini evaluates the submitted source code according to predefined software engineering guidelines and returns a structured JSON response (e.g., `{"approved": true, "score": 9, "feedback": "Well structured code."}`).
-4. **Branching Decision:**
-   - **If Rejected by AI:** GitHub receives an automatic code review requesting changes. Execution is logged and terminated.
-   - **If Approved by AI:** A Gmail notification is triggered, and Slack requests final human validation via interactive buttons.
-5. **Human-in-the-Loop (Final Resolution):** Upon manual action in Slack, the GitHub Review is officially submitted, the associated Trello card moves to "Done", and the audit log is updated to reflect the human decision.
+### Step 1 — GitHub Trigger
+The Workflow activates when GitHub detects a PR-related event. A `Filter` node ensures only specific review-ready events proceed.
+
+### Step 2 — Execution Logging
+Initial execution metadata (Owner, PR reference, status) is registered in n8n DataTables to maintain complete traceability.
+
+### Step 3 — AI Code Review
+The source code is evaluated by Google Gemini, outputting structured JSON including: `aprobado` (boolean), `recomendacion` (string), and `comentario` (string).
+
+### Step 4 — Parse JSON
+A Code node (JavaScript) sanitizes and parses the LLM output into standardized variables for downstream routing.
+
+### Step 5 — AI Decision
+The Workflow evaluates the AI's boolean decision:
+- ❌ **AI Rejected:** GitHub Review created. Slack notified. Execution logged and terminated.
+- ✅ **AI Approved:** Analysis forwarded to a human reviewer via interactive Slack blocks.
+
+### Step 6 — Human-in-the-Loop
+Slack presents the PR details, the AI's technical recommendation, and interactive Approval/Rejection buttons.
+
+### Step 7 — Human Decision
+- ❌ **Human Rejected:** GitHub Review requesting changes is posted. DataTables updated.
+- ✅ **Human Approved:** GitHub Review approved. Trello ID extracted. Trello card automatically moved to the "Done" list. DataTables finalized.
 
 ---
 
-## 📷 Workflow Showcase
+## 🧪 Workflow Validation (The 3 Scenarios)
 
-### n8n Orchestration
+This architecture has been stress-tested across the three primary decision routes:
+
+### ❌ Scenario 1: AI Rejection
+The AI detects severe anti-patterns and determines the PR should not proceed.
+* **Flow:** Trigger → Gemini → AI Decision: Rejected → GitHub Review → Slack Notification → Update DataTable.
+* **Result Validated:** Automatic rejection route executed flawlessly without human bottleneck.
+
+### 👤❌ Scenario 2: AI Approved / Human Rejected
+The AI finds no syntax/standard issues, but the human reviewer detects business-logic flaws.
+* **Flow:** Trigger → Gemini → AI Decision: Approved → Slack Approval → Human Decision: Rejected → GitHub Review → Update DataTable.
+* **Result Validated:** AI approved, but human override successfully halted the merge and requested changes on GitHub.
+
+### 👤✅ Scenario 3: AI Approved / Human Approved
+Code is technically sound and meets business logic.
+* **Flow:** Trigger → Gemini → AI Decision: Approved → Slack Approval → Human Decision: Approved → GitHub Review → Move Trello Card → Update DataTable.
+* **Result Validated:** End-to-end synchronization achieved. PR approved, PM tool updated, audit log completed.
+
+---
+
+## 📷 Screenshots
+
+### 1. Workflow Architecture in n8n
 ![Workflow n8n](screenshots/workflow-n8n.png)
-*Complete orchestrated workflow in n8n integrating GitHub, Gemini, Slack, Trello, and Gmail.*
+*General view of the implemented n8n workflow and its conditional routing.*
 
-### Slack Interactive Approval
+### 2. AI Analysis + Slack Approval
 ![Slack Approval](screenshots/slack-approval.png)
-*Slack interactive message requesting human approval based on the AI analysis.*
+*Interactive Slack message presenting AI recommendations to the human reviewer.*
 
-### Automated GitHub Review
-![GitHub Review](screenshots/github-review.png)
-*Automated AI-generated comment and review status on the GitHub Pull Request.*
-
-### Trello Synchronization
-![Trello Update](screenshots/trello-update.png)
-*Trello card automatically moved to the "Done" list after final human approval.*
-
-### Automated AI Rejection
+### 3. Automated AI Rejection
 ![Slack Reject AI](screenshots/slack-reject-ai.png)
 *Slack notification triggered when the AI autonomously rejects a Pull Request.*
+
+### 4. Human Rejection
+![Slack Human Reject](screenshots/slack-human-reject.png)
+*Notification corresponding to a manual rejection decision by the human reviewer.*
+
+### 5. Automated GitHub Review
+![GitHub Review](screenshots/github-review.png)
+*GitHub Review automatically generated during workflow execution.*
+
+### 6. Trello Synchronization
+![Trello Update](screenshots/trello.png)
+*Trello card moved to the "Done" list after full approval route completion.*
 
 ---
 
 ## 🔮 Future Improvements
 
-- [ ] Remove the testing node that forces AI approval.
-- [ ] Refine the Slack rejection UI/UX workflow.
-- [ ] Replace standard Trello ID extraction with robust Regex validation.
-- [ ] Implement `try/catch` error handling for malformed LLM JSON responses.
-- [ ] Add monitoring and execution metrics dashboards.
-- [ ] Migrate execution history storage to PostgreSQL.
+- [ ] Implement additional LLM JSON output validation schemas.
+- [ ] Add robust `try/catch` error handling nodes.
+- [ ] Implement retry logic for external APIs (GitHub/Trello rate limits).
+- [ ] Improve Trello ID extraction using advanced Regex.
+- [ ] Persist execution history in a PostgreSQL database.
+- [ ] Build a Looker Studio dashboard for AI vs. Human decision metrics.
 
 ---
 
 ## 💼 Skills Demonstrated
 
-`AI Workflow Orchestration` `Human-in-the-Loop Systems` `CI/CD Automation` `LLM Integration` `Prompt Engineering` `Event-Driven Architecture` `JavaScript` `API Integration`
+`AI Workflow Orchestration` `Human-in-the-Loop Systems` `LLM Integration` `Prompt Engineering` `GitHub Automation` `CI/CD Automation` `Event-Driven Architecture` `JavaScript` `Conditional Routing`
 
 ---
 
-## 📜 License
+## 📜 License & Author
 
-MIT License
+**MIT License**
 
----
+**Fausto Enrique Soto Euraque**  
+*AI Engineer | Data Scientist | Workflow Automation*
 
-## 👤 Author
-
-**Fausto Enrique Soto Euraque**
-
-*Data Scientist | AI Engineer | Automation Specialist*
-
-- **LinkedIn:** [linkedin.com/in/fausto-soto](https://linkedin.com/in/fausto-soto)
-- **GitHub:** [github.com/fsoto21](https://github.com/fsoto21) | [github.com/fsotoeu-cyber](https://github.com/fsotoeu-cyber)
+- **LinkedIn:** [linkedin.com/in/fsotoeu](https://linkedin.com/in/fsotoeu)
+- **GitHub:** [github.com/fsotoeu-cyber](https://github.com/fsotoeu-cyber)
   
 ---
 
-  # 🇪🇸 Versión en Español
+# 🇪🇸 Versión en Español
 
 # 🤖 Automatización de Revisión de Pull Requests con IA
-### Flujo de CI Inteligente con n8n, Google Gemini, GitHub, Slack y Trello
+### Workflow Inteligente de CI con n8n, Google Gemini, GitHub, Slack y Trello
 
-> Flujo de trabajo automatizado para revisión de código asistida por IA que valida Pull Requests, incorpora aprobación **Human-in-the-Loop** y sincroniza el estado del proyecto entre GitHub, Slack, Trello y n8n DataTables.
-
----
-
-<p align="center">
-  <a href="https://n8n.io/"><img src="https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white" alt="n8n" /></a>
-  <a href="https://gemini.google.com/"><img src="https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Google Gemini" /></a>
-  <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
-  <a href="https://slack.com/"><img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white" alt="Slack" /></a>
-  <a href="https://trello.com/"><img src="https://img.shields.io/badge/Trello-0052CC?style=for-the-badge&logo=trello&logoColor=white" alt="Trello" /></a>
-  <a href="https://mail.google.com/"><img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail" /></a>
-  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"><img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" /></a>
-</p>
+> Workflow de revisión de código asistida por IA que automatiza el análisis inicial de Pull Requests, incorpora validación humana mediante **Human-in-the-Loop** y sincroniza el resultado final entre GitHub, Slack, Trello y n8n DataTables.
 
 ---
 
-## 📌 Descripción General
+## 📌 Resumen
 
-Este proyecto implementa un flujo de trabajo de Integración Continua (CI) impulsado por IA utilizando **n8n**.
+Este proyecto implementa un Workflow de revisión automatizada de Pull Requests utilizando **n8n** como motor de orquestación y **Google Gemini** para realizar un análisis inicial del código.
 
-Cuando se abre un Pull Request, el flujo analiza automáticamente el código con **Google Gemini**, lo valida contra las mejores prácticas de ingeniería y decide si debe continuar a aprobación humana o ser rechazado inmediatamente.
+Cuando un desarrollador abre un Pull Request, el Workflow recibe el evento desde GitHub, registra la ejecución en **n8n DataTables** y envía la información relevante a Gemini para generar una evaluación estructurada.
 
-Si la IA aprueba el Pull Request, el flujo solicita la aprobación final de un líder técnico a través de **Mensajes Interactivos de Slack**. Una vez aprobado, GitHub, Trello y los registros de auditoría se actualizan automáticamente.
+A partir del análisis de la IA, el Workflow sigue dos posibles caminos:
+- **Si la IA rechaza el PR:** Se ejecuta automáticamente la ruta de rechazo solicitando cambios.
+- **Si la IA aprueba el PR:** El proceso continúa hacia una etapa de **Human-in-the-Loop**, donde un revisor humano toma la decisión final de aprobar o rechazar.
 
-**El objetivo:** Reducir los cuellos de botella en las revisiones de código y el cambio de contexto, manteniendo una supervisión humana estricta para decisiones críticas.
+La arquitectura combina automatización basada en IA con supervisión humana condicional y sincronización de estado entre repositorios, herramientas de comunicación y gestión de proyectos.
 
 ---
 
-## 🛑 El Problema
+## 🎯 Objetivo
 
-Las revisiones de código se convierten frecuentemente en un cuello de botella en el ciclo de vida del desarrollo de software. Los equipos dedican horas a revisar estándares de codificación repetitivos y cambian constantemente de contexto entre GitHub, Slack, Trello y otras herramientas. Esta fricción ralentiza los despliegues y hace que el seguimiento de proyectos sea ineficiente.
+Automatizar la primera etapa de revisión de código y reducir tareas repetitivas de coordinación, manteniendo intervención humana estricta cuando el Pull Request supera la evaluación inicial de la IA.
 
-## 💡 La Solución y el Valor de Negocio
-
-Este flujo de trabajo automatiza la primera etapa de validación de Pull Requests, actuando como un filtro inteligente antes de la intervención humana.
-
-* **Aumenta la Velocidad de Desarrollo:** Elimina el tiempo dedicado a revisiones iniciales de sintaxis y estándares.
-* **Reduce el Cambio de Contexto:** Los desarrolladores aprueban o rechazan directamente desde Slack sin abrir GitHub o Trello.
-* **Mantiene Seguridad y Calidad:** Aplica un estricto patrón *Human-in-the-Loop* auditable para decisiones finales.
+El Workflow demuestra integración a nivel empresarial de:
+- Automatización Orientada a Eventos
+- Integración de LLMs e Ingeniería de Prompts
+- Arquitectura Human-in-the-Loop (HITL)
+- Sincronización CI/CD y Project Management
+- Trazabilidad y Logs de Ejecución
 
 ---
 
 ## 🚀 Características
 
-- ✅ **Event-Driven:** Disparador de Pull Requests de GitHub.
-- ✅ **Revisión de Código con IA:** Análisis semántico automatizado con Google Gemini.
-- ✅ **Salida Estructurada:** Parseo de decisiones JSON determinístico.
-- ✅ **Human-in-the-Loop:** Aprobación interactiva mediante bloques de UI en Slack.
-- ✅ **Integración CI/CD:** Creación automática de revisiones en GitHub (Aprobar/Solicitar cambios).
-- ✅ **Sincronización de Proyectos:** Automatización de estado de tarjetas en Trello.
-- ✅ **Registro de Auditoría:** Historial de ejecución centralizado con n8n DataTables.
+- ✅ **Disparador (Trigger) en GitHub**
+- ✅ **Revisión asistida por IA** con Google Gemini
+- ✅ **Salida estructurada en JSON**
+- ✅ **Enrutamiento condicional de decisiones**
+- ✅ **Rechazo automático por IA**
+- ✅ **Aprobación Human-in-the-Loop** mediante Slack
+- ✅ **Automatización de GitHub Reviews**
+- ✅ **Sincronización con Trello**
+- ✅ **Registro interno de ejecuciones** con n8n DataTables
+- ✅ **Flujos 100% probados:** Tres rutas principales de decisión implementadas y validadas.
+
+---
+
+## 🛑 El Problema
+
+La revisión manual de código suele convertirse en un cuello de botella. Los equipos técnicos deben revisar PRs, comunicar decisiones y actualizar herramientas, lo cual genera fricción.
+
+El cambio constante entre GitHub, Slack y Trello ocasiona:
+- Procesos manuales repetitivos.
+- Mayor tiempo de coordinación.
+- Desincronización entre herramientas.
+- Pérdida de trazabilidad sobre las decisiones.
+
+---
+
+## 💡 La Solución
+
+El Workflow automatiza el filtro inicial. Cuando se abre un Pull Request:
+1. GitHub activa el Workflow.
+2. La ejecución se registra en DataTables.
+3. El código se envía a Gemini para análisis.
+4. Gemini devuelve un JSON estructurado.
+5. Si la IA rechaza, se solicita corrección automáticamente en GitHub.
+6. Si la IA aprueba, Slack solicita validación humana interactiva.
+7. Al aprobar el humano, GitHub, Trello y los logs se actualizan en segundos.
 
 ---
 
@@ -240,104 +344,161 @@ Este flujo de trabajo automatiza la primera etapa de validación de Pull Request
                  GitHub Pull Request
                          │
                          ▼
-                 GitHub Trigger (n8n)
+                 Trigger de GitHub (n8n)
                          │
                          ▼
-                 Store Execution Log
-                 (DataTables)
+             Registro de Ejecución
+                  (DataTables)
                          │
                          ▼
-                 Google Gemini Review
+               Revisión de Gemini
                          │
-                 JSON Decision Output
+                         ▼
+                   Decisión de IA
                          │
               ┌──────────┴──────────┐
               │                     │
               ▼                     ▼
-          AI Reject             AI Approves
+          IA Rechaza             IA Aprueba
               │                     │
               ▼                     ▼
-        GitHub Review         Slack Approval
-                                    │
-                           ┌────────┴────────┐
-                           ▼                 ▼
-                     Human Reject      Human Approves
-                           │                 │
-                           ▼                 ▼
-                     GitHub Review     GitHub Approval
-                                             │
-                                             ▼
-                                       Update Trello
-                                             │
-                                             ▼
-                                    Update DataTables
+      Revisión en GitHub    Aprobación en Slack
+              │                     │
+              ▼              Decisión Humana
+    Notificación en Slack            │
+              │             ┌────────┴────────┐
+              ▼             │                 │
+     Actualizar DataTable   ▼                 ▼
+                     Humano Rechaza     Humano Aprueba
+                            │                 │
+                            ▼                 ▼
+                   Revisión en GitHub  Revisión en GitHub
+                            │                 │
+                            ▼                 ▼
+                 Notificación Slack    Extraer ID Trello
+                            │                 │
+                            ▼                 ▼
+                 Actualizar DataTable  Mover Tarjeta Trello
+                                              │
+                                              ▼
+                                      Actualizar DataTable
 ```
 ---
 
-## 🔄 Lógica del Flujo
+## ⚙️ Tecnologías
 
-1. **Disparador:** GitHub detecta un nuevo Pull Request.
-2. **Inicialización de Auditoría:** La ejecución se registra instantáneamente en n8n DataTables.
-3. **Evaluación de IA:** Google Gemini evalúa el código según pautas predefinidas y devuelve una respuesta JSON estructurada (ej. `{"approved": true, "score": 9, "feedback": "Código bien estructurado."}`).
-4. **Decisión de Ramificación:**
-   - **Si es Rechazado por IA:** GitHub recibe una revisión automática solicitando cambios. La ejecución se registra y termina.
-   - **Si es Aprobado por IA:** Se activa una notificación por Gmail y Slack solicita validación humana final mediante botones interactivos.
-5. **Human-in-the-Loop (Resolución Final):** Tras la acción manual en Slack, la revisión de GitHub se confirma oficialmente, la tarjeta de Trello se mueve a "Hecho" y el registro de auditoría se actualiza.
+| Categoría | Tecnología |
+| :--- | :--- |
+| **Automatización** | n8n |
+| **IA / LLM** | Google Gemini |
+| **Control de Versiones** | GitHub |
+| **Colaboración** | Slack |
+| **Gestión de Proyectos** | Trello |
+| **Correo** | Gmail |
+| **Programación** | JavaScript |
+| **Base de Datos** | n8n DataTables |
 
 ---
 
-## 📷 Galería del Workflow
+## 🔄 Lógica del Workflow
 
-### Orquestación en n8n
+### Paso 1 — GitHub Trigger
+El Workflow se activa ante eventos de Pull Request. Un nodo `Filter` asegura que solo avancen los eventos de apertura pertinentes.
+
+### Paso 2 — Registro de Ejecución
+Se registra la metadata (Dueño, Referencia, Estado) en n8n DataTables para asegurar trazabilidad.
+
+### Paso 3 — Revisión de Código por IA
+Gemini evalúa el código y devuelve un JSON estructurado con: `aprobado` (booleano), `recomendacion` y `comentario`.
+
+### Paso 4 — Parseo JSON
+Un nodo de código (`JavaScript`) limpia la respuesta del LLM y la convierte en variables utilizables.
+
+### Paso 5 — Decisión de la IA
+- ❌ **IA Rechaza:** Se crea la revisión en GitHub solicitando cambios. Se notifica en Slack y termina la ejecución.
+- ✅ **IA Aprueba:** Se envía el análisis al líder técnico mediante bloques interactivos en Slack.
+
+### Paso 6 — Human-in-the-Loop
+Slack presenta los detalles del PR, la recomendación de la IA y botones para aprobar o rechazar.
+
+### Paso 7 — Decisión Humana
+- ❌ **Humano Rechaza:** Se envía revisión a GitHub solicitando cambios. Se actualizan logs.
+- ✅ **Humano Aprueba:** Se aprueba en GitHub, se extrae el ID de Trello y se mueve la tarjeta a la lista de "Hecho". Se cierra el ciclo en DataTables.
+
+---
+
+## 🧪 Validación del Workflow (Los 3 Escenarios)
+
+El sistema fue probado bajo estrés ejecutando las 3 rutas principales:
+
+### ❌ Escenario 1: Rechazo por IA
+La IA detecta malas prácticas y frena el PR.
+* **Flujo:** Trigger → Gemini → Decisión IA: Rechazado → GitHub Review → Notificación Slack → Update DataTable.
+* **Resultado Validado:** Ruta de rechazo automático ejecutada sin intervención humana.
+
+### 👤❌ Escenario 2: IA Aprueba / Humano Rechaza
+Código sintácticamente correcto, pero con fallos de lógica de negocio detectados por el humano.
+* **Flujo:** Trigger → Gemini → Decisión IA: Aprobado → Slack → Decisión Humana: Rechazado → GitHub Review → Update DataTable.
+* **Resultado Validado:** Aprobación de IA anulada correctamente por el supervisor humano.
+
+### 👤✅ Escenario 3: IA Aprueba / Humano Aprueba
+Código impecable a nivel técnico y de negocio.
+* **Flujo:** Trigger → Gemini → Decisión IA: Aprobado → Slack → Decisión Humana: Aprobado → GitHub Review → Mover Trello → Update DataTable.
+* **Resultado Validado:** Sincronización total End-to-End.
+
+---
+
+## 📷 Capturas de Pantalla
+
+### 1. Arquitectura en n8n
 ![Workflow n8n](screenshots/workflow-n8n.png)
-*Flujo de trabajo completo orquestado en n8n integrando GitHub, Gemini, Slack, Trello y Gmail.*
+*Vista general del Workflow implementado en n8n y sus rutas condicionales.*
 
-### Aprobación Interactiva en Slack
+### 2. Análisis de IA + Aprobación en Slack
 ![Slack Approval](screenshots/slack-approval.png)
-*Mensaje interactivo en Slack solicitando aprobación humana basada en el análisis de la IA.*
+*Mensaje interactivo enviado al revisor con la recomendación de la IA.*
 
-### Revisión Automatizada en GitHub
-![GitHub Review](screenshots/github-review.png)
-*Comentario y estado de revisión generados automáticamente por la IA en el Pull Request de GitHub.*
-
-### Sincronización con Trello
-![Trello Update](screenshots/trello-update.png)
-*Tarjeta de Trello movida automáticamente a la lista "Hecho" tras la aprobación humana final.*
-
-### Rechazo Automático por IA
+### 3. Rechazo Automático de IA
 ![Slack Reject AI](screenshots/slack-reject-ai.png)
-*Notificación en Slack activada cuando la IA rechaza automáticamente un Pull Request.*
+*Notificación disparada cuando la IA rechaza el código de forma autónoma.*
+
+### 4. Rechazo Humano
+![Slack Human Reject](screenshots/slack-human-reject.png)
+*Notificación correspondiente a la decisión de rechazo del supervisor humano.*
+
+### 5. Revisión Automatizada en GitHub
+![GitHub Review](screenshots/github-review.png)
+*Comentario y estado generado automáticamente en GitHub.*
+
+### 6. Sincronización con Trello
+![Trello Update](screenshots/trello.png)
+*Tarjeta movida a "Hecho" tras completar la ruta de aprobación.*
 
 ---
 
-## 🔮 Mejoras Futuras
+## 🔮 Futuras Mejoras
 
-- [ ] Eliminar el nodo de prueba que fuerza la aprobación de la IA.
-- [ ] Refinar la experiencia de rechazo en Slack.
-- [ ] Reemplazar la extracción de ID de Trello con validación robusta mediante Regex.
-- [ ] Implementar manejo de errores `try/catch` para respuestas JSON malformadas del LLM.
-- [ ] Añadir paneles de monitoreo y métricas de ejecución.
-- [ ] Migrar el almacenamiento de historial de ejecución a PostgreSQL.
+- [ ] Implementar esquemas de validación estrictos para la salida JSON del LLM.
+- [ ] Añadir manejo de errores `try/catch` nativo en n8n.
+- [ ] Implementar lógica de reintentos (`retry`) para APIs de GitHub y Trello.
+- [ ] Mejorar la extracción del ID de Trello mediante expresiones regulares avanzadas.
+- [ ] Persistir el historial de ejecuciones en una base de datos PostgreSQL.
+- [ ] Crear un dashboard en Looker Studio para analizar métricas de IA vs. Humano.
 
 ---
 
 ## 💼 Habilidades Demostradas
 
-`Orquestación de Flujos con IA` `Sistemas Human-in-the-Loop` `Automatización CI/CD` `Integración de LLMs` `Ingeniería de Prompts` `Arquitectura Event-Driven` `JavaScript` `Integración de APIs`
+`Orquestación de Workflows con IA` `Sistemas Human-in-the-Loop` `Integración de LLMs` `Ingeniería de Prompts` `Automatización CI/CD` `Arquitectura Orientada a Eventos` `JavaScript` `Enrutamiento Condicional`
 
 ---
 
-## 📜 Licencia
+## 📜 Licencia y Autor
 
-MIT License
+**Licencia MIT**
 
----
+**Fausto Enrique Soto Euraque**  
+*AI Engineer | Data Scientist | Workflow Automation*
 
-## 👤 Autor
-
-**Fausto Enrique Soto Euraque**
-
-*Data Scientist | AI Engineer | Automation Specialist*
-
-- **LinkedIn:** [linkedin.com/in/fausto-soto](https://linkedin.com/in/fausto-soto)
-- **GitHub:** [github.com/fsoto21](https://github.com/fsoto21) | [github.com/fsotoeu-cyber](https://github.com/fsotoeu-cyber)
+- **LinkedIn:** [linkedin.com/in/fsotoeu](https://linkedin.com/in/fsotoeu)
+- **GitHub:** [github.com/fsotoeu-cyber](https://github.com/fsotoeu-cyber)
