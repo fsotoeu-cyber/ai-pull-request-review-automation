@@ -111,8 +111,8 @@ This workflow automates the first stage of Pull Request validation, functioning 
 2. **Audit Initialization:** The execution is instantly registered in n8n DataTables.
 3. **AI Evaluation:** Google Gemini evaluates the submitted source code according to predefined software engineering guidelines and returns a structured JSON response (e.g., `{"approved": true, "score": 9, "feedback": "Well structured code."}`).
 4. **Branching Decision:**
-   * **If Rejected by AI:** GitHub receives an automatic code review requesting changes. Execution is logged and terminated.
-   * **If Approved by AI:** A Gmail notification is triggered, and Slack requests final human validation via interactive buttons.
+   - **If Rejected by AI:** GitHub receives an automatic code review requesting changes. Execution is logged and terminated.
+   - **If Approved by AI:** A Gmail notification is triggered, and Slack requests final human validation via interactive buttons.
 5. **Human-in-the-Loop (Final Resolution):** Upon manual action in Slack, the GitHub Review is officially submitted, the associated Trello card moves to "Done", and the audit log is updated to reflect the human decision.
 
 ---
