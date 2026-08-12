@@ -1,0 +1,963 @@
+{
+  "name": "AI-Powered PR Review Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "owner": {
+          "__rl": true,
+          "value": "YOUR_GITHUB_USER_URL",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR_REPOSITORY_URL",
+          "mode": "url"
+        },
+        "events": [
+          "pull_request"
+        ],
+        "options": {}
+      },
+      "id": "abf4e7de-4256-4a1d-860e-51078bb0d904",
+      "name": "New PR",
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2992,
+        144
+      ],
+      "webhookId": "1d2c555f-86f1-445d-bb37-4acbdab5b63b",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "YOUR_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "60c1ef36-8743-49f1-85e1-28e4ee34bf5e",
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "opened",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b84297bd-d3e2-47d9-b7c1-dc5f6109d235",
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "synchronize",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "a3df355c-b3cb-40aa-b8ba-f8c354f32330",
+      "name": "Aceptar solo opened",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -2768,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ower": "={{ $json.body.pull_request.head.repo.owner.login }}",
+            "PrLink": "={{ $json.body.pull_request.labels[0].url }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ower",
+              "displayName": "Ower",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PrLink",
+              "displayName": "PrLink",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado",
+              "displayName": "Aprobado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Finalizado",
+              "displayName": "Finalizado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2172b0b1-8846-41c8-b4db-75c8c30b693e",
+      "name": "Insert row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -2544,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "exec_id",
+              "value": "={{ $execution.id }}"
+            }
+          ]
+        }
+      },
+      "id": "e547069f-b08a-4105-a416-ce3b1b83b200",
+      "name": "Execution Data",
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        -2320,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL",
+        "subject": "=New pull requests from:  {{ $json.body.pull_request.labels[0].url }}",
+        "message": "={{ $json.body.pull_request.user.login }} A caba de realizar una PR en:{{ $json.body.pull_request.user.url }}",
+        "options": {}
+      },
+      "id": "dbaa1a7c-afbb-4683-888f-12aad9d9504d",
+      "name": "Enviar mail al responsable",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -688,
+        32
+      ],
+      "webhookId": "898077df-493d-42e7-92f8-6f0487cc5e07",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "id"
+        },
+        "message": "=PR desde: {{ $('New PR').item.json.body.pull_request.url }}\nautor: {{ $('New PR').item.json.body.pull_request.user.login }}\nEsta aprobado?:\nRecomendación de la IA:{{ $('Code in JavaScript1').item.json.recomendacion }}\nComentario:{{ $('Code in JavaScript1').item.json.comentario }}\n\n",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "id": "a8154063-e8c9-4900-973f-9d6b09209a97",
+      "name": "A esperar confirmacion1",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        -480,
+        32
+      ],
+      "webhookId": "c3196565-42a9-4db0-bede-8101aa1a4793",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "86e8ff82-fd0a-4324-aaba-aa13f8764499",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "16a80773-0628-4d0b-8205-70149f320a9c",
+      "name": "Desicion",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "review",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('New PR').item.json.body.pull_request.user.html_url }}",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR_REPOSITORY_URL",
+          "mode": "url"
+        },
+        "pullRequestNumber": "={{ $('New PR').item.json.body.number }}",
+        "event": "comment",
+        "body": "Aprobado",
+        "additionalFields": {}
+      },
+      "id": "cb256e9c-4d4c-47f9-9343-02913a8a234a",
+      "name": "Create a review",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        -48
+      ],
+      "webhookId": "dd9136cc-a0cd-4ca1-b61a-51a3d86312ae",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "YOUR_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let textos = $('New PR').first().json.body.pull_request.title.split(\"-\");\nlet id = textos.pop().trim();\nreturn { \"id_card\": id };"
+      },
+      "id": "a65ff119-0b82-42f7-815a-c9da6e371f15",
+      "name": "Code in JavaScript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "list",
+        "operation": "getAll",
+        "id": "YOUR_TRELLO_BOARD_ID",
+        "additionalFields": {}
+      },
+      "id": "5b5fe63a-6392-4f34-a5e9-1ed36b8ce70f",
+      "name": "Get many lists",
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -48
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "YOUR_TRELLO_CREDENTIAL_ID",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c5895395-b70e-45cc-85a0-09349e84d7f8",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "Hecho",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "af5f11ac-9777-424b-9b7c-f125531d1b7b",
+      "name": "Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": {
+          "__rl": true,
+          "value": "={{ $('Code in JavaScript').item.json.id_card }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "idList": "={{ $json.id }}"
+        }
+      },
+      "id": "dd23cadf-d517-4af3-990a-cda1d6e7a88f",
+      "name": "Update a card",
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -48
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "YOUR_TRELLO_CREDENTIAL_ID",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_ID",
+          "mode": "list"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Insert row').item.json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Aprobado": "={{ $('A esperar confirmacion1').isExecuted ? $('A esperar confirmacion1').item.json.data.approved : false }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ower",
+              "displayName": "Ower",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "PrLink",
+              "displayName": "PrLink",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Aprobado",
+              "displayName": "Aprobado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Finalizado",
+              "displayName": "Finalizado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b6464df0-5810-4324-9966-3f453a5569e1",
+      "name": "Update row(s)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "review",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('New PR').item.json.body.pull_request.user.html_url }}",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR_REPOSITORY_URL",
+          "mode": "url"
+        },
+        "pullRequestNumber": "={{ $('New PR').item.json.body.number }}",
+        "event": "comment",
+        "body": "=Rechazado por el revisor humano en Slack. PR: {{ $('New PR').item.json.body.pull_request.url }}",
+        "additionalFields": {}
+      },
+      "id": "594b06f2-33ee-4382-b794-13a91b3f6c15",
+      "name": "Create a review1",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        256
+      ],
+      "webhookId": "9a9753eb-23d3-4e19-af19-895f5d377195",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "YOUR_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Necesitamos:\n- Dueño del PR\n- Link del PR\n- Aprobado\n- Finalizado?\n\n## FIX aplicado:\n- Se eliminó 'Edit Fields' (forzaba aprobado=true).\n- 'Create a review1' ya no repite 'Aprobado' en rechazo humano.\n- Diff real vía nodo GitHub nativo (Pull Request > Get Diff), evita\n  la restricción de credenciales que da el HTTP Request genérico.\n- CONFIRMADO con PR #4: sin el fetch del diff, Gemini alucinaba\n  revisiones completas de código que nunca existió.\n\n## FIX adicional:\n- 'Update row(s)' ya no revienta cuando la IA rechaza\n  directo (Slack nunca corrió en ese camino). Usa isExecuted.\n\n## Notificaciones agregadas:\n- 'Notificar rechazo IA': avisa en Slack (mismo canal) cuando la IA rechaza directo.\n- 'Notificar rechazo humano': avisa en Slack cuando el humano rechaza en la aprobación.\n\n## Filtro actualizado:\n- 'Aceptar solo opened' ahora acepta action == 'opened' OR action == 'synchronize'.\n- Esto permite que se re-revisen PRs cuando se suben commits nuevos después de abiertos,\n  no solo al momento de abrir el PR. Puede generar más mensajes de Slack si hay muchos commits.",
+        "height": 256,
+        "width": 278
+      },
+      "id": "1a23b3fe-7af9-4c34-aee6-631f9e8da6fa",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Actua como un profesional de IT con mucha experiencia. Tu respuesta debe ser concisa y sin rodeos.",
+              "role": "model"
+            },
+            {
+              "content": "=Creamos un PR para el sistema de Automaton Inc, y necesito que analices el diff real contra buenas practicas (funcional, React, Typescript) y me des una devolución.\n\nDiff completo:\n{{ $json.diff.slice(0, 12000) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "Considera las buenas practicas de programacion funcional, React y Typescript. La salida debe ser en JSON con la siguiente estructura:{aprobado:{true,false}, recomendacion:{string}, comentario:{string}}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -1872,
+        144
+      ],
+      "id": "0cb595bb-0572-4453-ad38-b06632f73076",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini (PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let textoCrudo = $input.first().json.content.parts[0].text;\nlet respuesta = JSON.parse(textoCrudo);\nreturn respuesta;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        144
+      ],
+      "id": "bd490eb5-858f-4b33-b22b-9f394eceadfe",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "44b2b7e7-91d1-494a-a5cd-d4ca3a8f0a0d",
+              "leftValue": "={{ $json.aprobado }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1088,
+        144
+      ],
+      "id": "e9a052ea-3177-458e-a80f-643cc0e9130e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "review",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $('New PR').item.json.body.pull_request.user.html_url }}",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR_REPOSITORY_URL",
+          "mode": "url"
+        },
+        "pullRequestNumber": "={{ $('New PR').item.json.body.number }}",
+        "event": "comment",
+        "body": "=No Aprobado por AI. Comment:  {{ $('Code in JavaScript1').item.json.comentario }}",
+        "additionalFields": {}
+      },
+      "id": "19abee69-6554-41f0-b035-8715a4ba8daf",
+      "name": "Create a review2",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        688
+      ],
+      "webhookId": "9a9753eb-23d3-4e19-af19-895f5d377195",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "YOUR_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "pullRequest",
+        "operation": "getDiff",
+        "pullRequestNumber": "={{ $('New PR').item.json.body.number }}",
+        "owner": {
+          "__rl": true,
+          "value": "YOUR_GITHUB_USER_URL",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR_REPOSITORY_URL",
+          "mode": "url"
+        }
+      },
+      "id": "19e42e45-c9cd-4fa5-a8be-57d3b1ac5494",
+      "name": "Obtener diff (GitHub nativo)",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -2096,
+        144
+      ],
+      "webhookId": "d0ba907a-f217-4815-8256-c8b7c80cb70f",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "YOUR_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "id"
+        },
+        "text": "=❌ PR rechazado automáticamente por la IA.\nPR: {{ $('New PR').item.json.body.pull_request.url }}\nAutor: {{ $('New PR').item.json.body.pull_request.user.login }}\nMotivo: {{ $('Code in JavaScript1').item.json.recomendacion }}",
+        "otherOptions": {}
+      },
+      "id": "3514d1a3-b3cd-4295-85a3-40cf027d3176",
+      "name": "Notificar rechazo IA",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        128,
+        928
+      ],
+      "webhookId": "eebcd0c0-289f-4e9d-8e14-a990e0085ada",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "id"
+        },
+        "text": "=❌ PR rechazado por el revisor humano.\nPR: {{ $('New PR').item.json.body.pull_request.url }}\nAutor: {{ $('New PR').item.json.body.pull_request.user.login }}",
+        "otherOptions": {}
+      },
+      "id": "77fc94c3-b298-4b70-a3c5-50cc5e241d79",
+      "name": "Notificar rechazo humano",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        480
+      ],
+      "webhookId": "af4953b0-1e58-445e-bf9c-fd14ced994a7",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New PR": {
+      "main": [
+        [
+          {
+            "node": "Aceptar solo opened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aceptar solo opened": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Data": {
+      "main": [
+        [
+          {
+            "node": "Obtener diff (GitHub nativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar mail al responsable": {
+      "main": [
+        [
+          {
+            "node": "A esperar confirmacion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A esperar confirmacion1": {
+      "main": [
+        [
+          {
+            "node": "Desicion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Desicion": {
+      "main": [
+        [
+          {
+            "node": "Create a review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a review1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a review": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get many lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many lists": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Update a card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a card": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a review1": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notificar rechazo humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Enviar mail al responsable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a review2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a review2": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notificar rechazo IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener diff (GitHub nativo)": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "66eec97b-8f8a-4747-b9cd-2c798e3438bc",
+  "meta": {
+    "instanceId": "YOUR_N8N_INSTANCE_ID"
+  },
+  "nodeGroups": [],
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}
