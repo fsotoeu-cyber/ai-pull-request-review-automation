@@ -252,27 +252,33 @@ The implemented workflow provides:
 
 # 📷 Screenshots
 
-## Workflow (n8n)
-
-> *Insert screenshot here*
-
----
-
-## Slack Approval
-
-> *Insert screenshot here*
+### Workflow en n8n
+![Workflow n8n](screenshots/workflow-n8n.png)
+*Vista del workflow orquestado en n8n con integración a GitHub, Gemini, Slack, Trello y Gmail.*
 
 ---
 
-## GitHub Review
-
-> *Insert screenshot here*
+### Aprobación en Slack
+![Slack Approval](screenshots/slack-approval.png)
+*Mensaje en Slack solicitando aprobación humana con el análisis de la IA y botones interactivos.*
 
 ---
 
-## Trello Update
+### Revisión en GitHub
+![GitHub Review](screenshots/github-review.png)
+*Comentario automático generado por la IA en el Pull Request.*
 
-> *Insert screenshot here*
+---
+
+### Tarjeta en Trello
+![Trello Update](screenshots/trello-update.png)
+*Tarjeta movida a la lista "Hecho" después de la aprobación final.*
+
+---
+
+### Rechazo por IA en Slack
+![Slack Reject AI](screenshots/slack-reject-ai.png)
+*Mensaje en Slack cuando la IA rechaza automáticamente el Pull Request.*
 
 ---
 
