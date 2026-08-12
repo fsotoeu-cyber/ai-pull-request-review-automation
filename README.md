@@ -508,7 +508,7 @@ Código impecable a nivel técnico y de negocio.
 
 **Licencia MIT**
 
-**Fausto Enrique Soto Euraque**  
+**Fausto Enrique Soto Euraque.**  
 *AI Engineer | Data Scientist | Workflow Automation*
 
 - **LinkedIn:** [linkedin.com/in/fsotoeu](https://linkedin.com/in/fsotoeu)
