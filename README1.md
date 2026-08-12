@@ -471,7 +471,7 @@ Código impecable a nivel técnico y de negocio.
 *Comentario y estado generado automáticamente en GitHub.*
 
 ### 6. Sincronización con Trello
-![Trello Update](screenshots/trello.png)
+![Trello Update](screenshots/trello-update.png)
 *Tarjeta movida a "Hecho" tras completar la ruta de aprobación.*
 
 ---
