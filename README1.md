@@ -228,7 +228,7 @@ Code is technically sound and meets business logic.
 *GitHub Review automatically generated during workflow execution.*
 
 ### 6. Trello Synchronization
-![Trello Update](screenshots/trello.png)
+![Trello Update](screenshots/trello-update.png)
 *Trello card moved to the "Done" list after full approval route completion.*
 
 ---
